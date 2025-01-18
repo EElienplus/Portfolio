@@ -24,7 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const decodedCredentials = decodeURIComponent(userCookie);
             const [storedUsername, storedPassword] = decodedCredentials.split('&').map(pair => pair.split('=')[1]);
             return username === storedUsername && password === storedPassword;
+        } else if (username == "Terka" || username == "Tereza") {
+            return username === storedUsername && password === storedPassword;
+
         }
+
+
         return false;
     }
 

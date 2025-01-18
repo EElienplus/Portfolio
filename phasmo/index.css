@@ -1,0 +1,58 @@
+#attributesSelector {
+    margin-left: 200px;
+    position: absolute;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    background-image: url("background.jpg");
+    background-size: 1500px;
+    font-family: Helvetica;
+    color: aliceblue;
+    font-size: x-large;
+}
+
+#ghostSelector{
+    width: 130px;
+}
+
+button{
+    width: 100px;
+}
+
+#abilityDisplay{
+    margin-top: 150px;
+}
+
+
+.ghost-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px;
+    width: 150px;
+    margin-left: 1000px;
+    position: absolute;
+
+}
+.ghost-name {
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+.ghost-name.green {
+    background-color: green;
+    color: white;
+}
+.ghost-name.red {
+    background-color: red;
+    color: white;
+}
+.ghost-name.normal {
+    background-color: #f4f4f4;
+    color: black;
+}

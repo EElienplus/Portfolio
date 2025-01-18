@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Journal</title>
+    <script src="index.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+
+<!-- Dropdown for selecting a ghost -->
+<select id="ghostSelector">
+    <option value="" disabled selected>Select a ghost</option>
+    <option value="Spirit">Spirit</option>
+    <option value="Wraith">Wraith</option>
+    <option value="Phantom">Phantom</option>
+    <option value="Poltergeist">Poltergeist</option>
+    <option value="Banshee">Banshee</option>
+    <option value="Jinn">Jinn</option>
+    <option value="Mare">Mare</option>
+    <option value="Revenant">Revenant</option>
+    <option value="Shade">Shade</option>
+    <option value="Demon">Demon</option>
+    <option value="Yurei">Yurei</option>
+    <option value="Oni">Oni</option>
+    <option value="Yokai">Yokai</option>
+    <option value="Hantu">Hantu</option>
+    <option value="Goryo">Goryo</option>
+    <option value="Myling">Myling</option>
+    <option value="Onryo">Onryo</option>
+    <option value="The_Twins">The Twins</option>
+    <option value="Raiju">Raiju</option>
+    <option value="Obake">Obake</option>
+    <option value="The_Mimic">The Mimic</option>
+    <option value="Moroi">Moroi</option>
+    <option value="Deogen">Deogen</option>
+    <option value="Thaye">Thaye</option>
+</select>
+
+<div id="attributesDisplay"></div>
+
+<!-- Section for selecting attributes -->
+<div id="attributesSelector">
+<h3>Select 3 Attributes:</h3>
+    <input type="checkbox" value="DOTS" id="dots"> DOTS<br>
+    <input type="checkbox" value="EMF 5" id="emf5"> EMF 5<br>
+    <input type="checkbox" value="Spirit Box" id="spiritBox"> Spirit Box<br>
+    <input type="checkbox" value="Ghost Writing" id="ghostWriting"> Ghost Writing<br>
+    <input type="checkbox" value="Ghost Orbs" id="ghostOrbs"> Ghost Orbs<br>
+    <input type="checkbox" value="Ultra Violet" id="ultraViolet"> Ultra Violet<br>
+    <input type="checkbox" value="Freezing Temps" id="freezingTemps"> Freezing Temps<br>
+<button id="findGhosts">Find Ghosts</button>
+<div id="matchingGhosts"></div>
+</div>
+
+<!-- Special Ability Display -->
+<div id="abilityDisplay"></div>
+
+<!-- Ghost Grid -->
+<div id="ghostGrid" class="ghost-grid"></div>
+
+
+</body>
+</html>

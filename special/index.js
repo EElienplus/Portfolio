@@ -13,4 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'terka/index.html';
         }
     });
+
+
+let back = document.getElementById("back");
+back.addEventListener('click', () => {
+    window.location.href = '../index.html'
+})
+
 });

@@ -1,12 +1,24 @@
 // Assuming there is an element with the ID 'send' in the HTML
-const send = document.getElementById('send');
+const special = document.getElementById('special');
+const aboutMe = document.getElementById('aboutMe');
 
-if (send) {
-    send.addEventListener('click', () => {
+if (special) {
+    special.addEventListener('click', () => {
         window.location.href = 'special/index.html';
     });
 }
 
-function lol(){
+if(aboutMe) {
+    aboutMe.addEventListener('click', () => {
+        window.location.href = 'AboutMe/index.html'
+    })
+}
+
+function lol() {
     window.location.href = 'special/index.html';
+}
+
+function lol2() {
+    window.location.href = 'AboutMe/index.html'
+
 }

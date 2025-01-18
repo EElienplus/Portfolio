@@ -1,7 +1,7 @@
 // Assuming there is an element with the ID 'send' in the HTML
 const special = document.getElementById('special');
 const aboutMe = document.getElementById('aboutMe');
-const projects = document.getElementbyId('projects')
+const projects = document.getElementbyId('projects');
 
 if (special) {
     special.addEventListener('click', () => {
@@ -26,10 +26,10 @@ function lol() {
 }
 
 function lol2() {
-    window.location.href = 'AboutMe/index.html'
+    window.location.href = 'AboutMe/index.html';
 
 }
 
 function lol3() {
-    window.location.href = 'phasmo/index.html'
+    window.location.href = 'phasmo/index.html';
 }

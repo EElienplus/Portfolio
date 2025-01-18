@@ -1,7 +1,7 @@
 // Assuming there is an element with the ID 'send' in the HTML
 const special = document.getElementById('special');
 const aboutMe = document.getElementById('aboutMe');
-const projects = document.getElementbyId('projects');
+const projects = document.getElementById('projects');
 
 if (special) {
     special.addEventListener('click', () => {

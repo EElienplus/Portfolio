@@ -15,7 +15,7 @@ if(aboutMe) {
     })
 }
 
-document. addEventListener("DOMContentLoaded", (event) => {
+document.addEventListener("DOMContentLoaded", (event) => {
 if(projects) {
     projects.addEventListener('click', () => {
         window.location.href = 'phasmo/index.html';

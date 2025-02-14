@@ -36,5 +36,5 @@ function lol3() {
 }
 
 function yesIWill() {
-        window.location.href = 'yesiwill.html';
+        window.location.href = 'ds/index.html';
 }

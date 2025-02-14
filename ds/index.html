@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine's Day Surprise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Happy Valentine's Day!</h1>
+    <div class="heart-container" onclick="revealMessage()">
+        <img src="heart.png" alt="Heart" class="heart-image">
+    </div>
+    <div class="message-box" id="messageBox">
+        <p id="messageText"></p>
+        <div class="interactive-section">
+            <h2>Love Calculator</h2>
+            <input type="text" id="name1" placeholder="Your Name">
+            <input type="text" id="name2" placeholder="Partner's Name">
+            <button class="btn" onclick="calculateLove()">Calculate</button>
+            <p id="loveResult"></p>
+
+            <h2>Express Your Love</h2>
+            <textarea id="loveNote" placeholder="Write your love message..."></textarea>
+            <button class="btn" onclick="displayLoveNote()">Send</button>
+            <p id="displayNote"></p>
+
+            <button id="colorChangeButton" onclick="changeBackgroundColor()">Change Background Color</button>
+
+            <button id="clickMeButton" onclick="showSurprise()">Click Me!</button>
+            <p id="surpriseMessage"></p>
+
+            <h2>Interactive Heart</h2>
+            <div id="interactiveHeart" onclick="toggleHeartColor()"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

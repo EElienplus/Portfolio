@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .title {
+            position: relative;
+            z-index: 2;
+            color: white;
+            font-size: 8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 15px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <div class="title">yes</div>
+
+    <script>
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+
+        // Mouse position
+        let mouse = {
+            x: null,
+            y: null,
+            radius: 150
+        };
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Track mouse movement
+        document.addEventListener('mousemove', function(event) {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        // Particle class
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 30) + 1;
+            }
+
+            update() {
+                // Mouse interaction
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    let forceDirectionX = dx / distance;
+                    let forceDirectionY = dy / distance;
+                    
+                    // Maximum distance past which particles are not affected
+                    const maxDistance = mouse.radius;
+                    
+                    if (distance < maxDistance) {
+                        // Repel particles from mouse
+                        let force = (maxDistance - distance) / maxDistance;
+                        let directionX = forceDirectionX * force * this.density;
+                        let directionY = forceDirectionY * force * this.density;
+                        
+                        this.x -= directionX;
+                        this.y -= directionY;
+                    } else {
+                        // Return to original position
+                        if (this.x !== this.baseX) {
+                            let dx = this.x - this.baseX;
+                            this.x -= dx/20;
+                        }
+                        if (this.y !== this.baseY) {
+                            let dy = this.y - this.baseY;
+                            this.y -= dy/20;
+                        }
+                    }
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Create particle array
+        const particles = Array.from({ length: 200 }, () => new Particle());
+
+        // Connect particles that are close to each other
+        function connect() {
+            for (let a = 0; a < particles.length; a++) {
+                for (let b = a; b < particles.length; b++) {
+                    let dx = particles[a].x - particles[b].x;
+                    let dy = particles[a].y - particles[b].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 100) {
+                        // Make lines more transparent the further apart particles are
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${1 - distance/100})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            connect();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

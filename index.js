@@ -37,4 +37,5 @@ function lol3() {
 
 function yesIWill() {
         window.location.href = 'ds/index.html';
+        console.log("Hello world!");
 }

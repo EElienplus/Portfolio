@@ -34,3 +34,7 @@ function lol2() {
 function lol3() {
     window.location.href = 'phasmo/index.html';
 }
+
+function yesIWill() {
+        window.location.href = 'yesiwill.html';
+}

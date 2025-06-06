@@ -25,7 +25,7 @@ if(projects) {
 
 if (translator) { // Added null check
     translator.addEventListener('click', () => { // Corrected addEventListener syntax
-        window.location.href = 'translator.html';
+        window.location.href = './translator.html';
     });
 }
 }

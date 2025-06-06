@@ -23,10 +23,11 @@ if(projects) {
     })
 
 
-    translator.addEventListener('click'), () => {
+if (translator) { // Added null check
+    translator.addEventListener('click', () => { // Corrected addEventListener syntax
         window.location.href = 'translator.html';
-        
-    }
+    });
+}
 }
 });
 function lol() {

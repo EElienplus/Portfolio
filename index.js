@@ -2,6 +2,7 @@
 const special = document.getElementById('special');
 const aboutMe = document.getElementById('aboutMe');
 const projects = document.getElementById('projects');
+const translator = document.getElementByID("translator");
 
 if (special) {
     special.addEventListener('click', () => {
@@ -20,6 +21,12 @@ if(projects) {
     projects.addEventListener('click', () => {
         window.location.href = 'phasmo/index.html';
     })
+
+
+    translator.addEventListener('click'), () => {
+        window.location.href = 'translator.html';
+        
+    }
 }
 });
 function lol() {
@@ -30,6 +37,8 @@ function lol2() {
     window.location.href = 'AboutMe/index.html';
 
 }
+
+
 
 function lol3() {
     window.location.href = 'phasmo/index.html';

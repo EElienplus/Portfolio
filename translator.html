@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Překladač Mého Vlastního Jazyka</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        /* Specific input/textarea styling for better visibility */
+        textarea, input[type="text"] {
+            border: 1px solid #cbd5e1; /* border-slate-300 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.75rem; /* p-3 */
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            color: #334155; /* slate-700 */
+        }
+        /* Styling for the main card container */
+        .card-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* rounded-3xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            padding: 2rem; /* p-8 */
+            width: 100%;
+            max-width: 900px; /* Max width for desktop */
+        }
+        /* Button styling */
+        button {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            border-radius: 0.75rem; /* rounded-xl */
+            font-weight: 600; /* font-semibold */
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        }
+        button:hover {
+            background-color: #4338ca; /* indigo-700 */
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        /* Radio button styling */
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            margin-right: 0.5rem;
+        }
+        .radio-group label:hover {
+            background-color: #f3f4f6; /* gray-50 */
+        }
+        .radio-group input[type="radio"]:checked + span {
+            color: #4f46e5; /* indigo-600 */
+            font-weight: 600;
+        }
+        .radio-group input[type="radio"]:checked ~ label {
+            border-color: #4f46e5; /* indigo-600 */
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+        }
+        /* Hide default radio input */
+        .radio-group input[type="radio"] {
+            display: none;
+        }
+        /* Styling for the info message */
+        .info-message {
+            background-color: #e0f2fe; /* light blue */
+            color: #2563eb; /* blue-700 */
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container flex flex-col gap-6">
+        <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-6">Překladač Mého Vlastního Jazyka</h1>
+
+        <div class="flex flex-col md:flex-row gap-6">
+            <div class="flex-1">
+                <label for="inputText" class="block text-lg font-medium text-gray-700 mb-2">Vstupní text:</label>
+                <textarea id="inputText" rows="6" class="w-full rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+            </div>
+            <div class="flex-1">
+                <label for="outputText" class="block text-lg font-medium text-gray-700 mb-2">Přeložený text:</label>
+                <textarea id="outputText" rows="6" class="w-full rounded-lg shadow-sm bg-gray-50 text-gray-600" readonly></textarea>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="radio-group flex gap-3 text-lg font-medium">
+                <label>
+                    <input type="radio" name="translationDirection" value="cz_to_my" checked>
+                    <span class="ml-2 text-gray-700">Čeština → Můj Jazyk</span>
+                </label>
+                <label>
+                    <input type="radio" name="translationDirection" value="my_to_cz">
+                    <span class="ml-2 text-gray-700">Můj Jazyk → Čeština</span>
+                </label>
+            </div>
+            <button id="translateButton" class="w-full sm:w-auto mt-4 sm:mt-0 shadow-md">Přeložit</button>
+        </div>
+
+        <div id="messageArea" class="info-message hidden"></div>
+    </div>
+
+    <script>
+        // --- 1. Slovní zásoba (Zkopírováno z Pythonu, přizpůsobeno pro JS) ---
+
+        // Zájmena
+        const PRONOUNS_CZ_TO_MY_LANG = {
+            'já': 'ai', 'ty': 'dai', 'on': 'hai', 'ona': 'nai', 'ono': 'tai',
+            'my': 'mi', 'vy': 'vi', 'oni': 'hi', 'ony': 'ti'
+        };
+        const PRONOUNS_MY_LANG_TO_CZ = Object.fromEntries(
+            Object.entries(PRONOUNS_CZ_TO_MY_LANG).map(([k, v]) => [v, k])
+        );
+
+        // Podstatná jména
+        const NOUNS_CZ_TO_MY_LANG = {
+            'dům': 'dom', 'strom': 'drev', 'voda': 'nisa', 'jídlo': 'nian',
+            'slunce': 'sun', 'měsíc': 'mon', 'pes': 'guk', 'kočka': 'ket',
+            'kniha': 'libr', 'žena': 'vesta', 'muž': 'lani', 'dítě': 'kido',
+            'město': 'grad', 'svět': 'mund', 'země': 'tera', 'déšť': 'pluv'
+        };
+        const NOUNS_MY_LANG_TO_CZ = Object.fromEntries(
+            Object.entries(NOUNS_CZ_TO_MY_LANG).map(([k, v]) => [v, k])
+        );
+
+        // Slovesa (infinitivy)
+        const VERBS_CZ_TO_MY_LANG = {
+            'být': 'es', 'mít': 'hav', 'jít': 'ir', 'přijít': 'ven', 'jíst': 'eden',
+            'pít': 'pit', 'vidět': 'viz', 'mluvit': 'parol', 'chtít': 'vol',
+            'dělat': 'fak', 'dát': 'don', 'vzít': 'prend', 'vědět': 'sav',
+            'rozumět': 'kompr', 'žít': 'viv', 'zemřít': 'mor', 'pracovat': 'labor',
+            'spát': 'dorm', 'lézt': 'lez', 'pršet': 'pluv'
+        };
+        const VERBS_MY_LANG_TO_CZ = Object.fromEntries(
+            Object.entries(VERBS_CZ_TO_MY_LANG).map(([k, v]) => [v, k])
+        );
+
+        // Adjektiva (základní tvar)
+        const ADJECTIVES_CZ_TO_MY_LANG = {
+            'dobrý': 'bon', 'zlý': 'mal', 'velký': 'grand', 'malý': 'min',
+            'rychlý': 'rad', 'pomalý': 'lent'
+        };
+        const ADJECTIVES_MY_LANG_TO_CZ = Object.fromEntries(
+            Object.entries(ADJECTIVES_CZ_TO_MY_LANG).map(([k, v]) => [v, k])
+        );
+
+        // Měsíce
+        const MONTHS_CZ_TO_MY_LANG = {
+            'leden': 'janiari', 'únor': 'fabruari', 'březen': 'marc',
+            'duben': 'aipril', 'květen': 'mai', 'červen': 'junai',
+            'červenec': 'julai', 'srpen': 'august', 'září': 'septuar',
+            'říjen': 'oktobar', 'listopad': 'novembar', 'prosinec': 'decembar'
+        };
+        const MONTHS_MY_LANG_TO_CZ = Object.fromEntries(
+            Object.entries(MONTHS_CZ_TO_MY_LANG).map(([k, v]) => [v, k])
+        );
+
+        // Dny v týdnu
+        const DAYS_CZ_TO_MY_LANG = {
+            'pondělí': 'monat', 'úterý': 'donat', 'středa': 'sonat',
+            'čtvrtek': 'tonat', 'pátek': 'fonat', 'sobota': 'conat', 'neděle': 'ponat'
+        };
+        const DAYS_MY_LANG_TO_CZ = Object.fromEntries(
+            Object.entries(DAYS_CZ_TO_MY_LANG).map(([k, v]) => [v, k])
+        );
+
+        // Spojky a předložky
+        const CONJ_PREP_CZ_TO_MY_LANG = {
+            'a': 'ai', 'i': 'ei', 'vedle': 'u', 'před': 'abr', 'za': 'hantr',
+            'pod': 'untr', 'mezi': 'intr', 'nad': 'nantr', 'vedle': 'zantr',
+            'na': 'antr', 'jestli': 'dann', 'pokud': 'dann'
+        };
+        const CONJ_PREP_MY_LANG_TO_CZ = Object.fromEntries(
+            Object.entries(CONJ_PREP_CZ_TO_MY_LANG).map(([k, v]) => [v, k])
+        );
+
+        // Numerály (základní)
+        const NUMBERS_CZ_TO_MY_LANG = {
+            0: 'nula', 1: 'als', 2: 'dvais', 3: 'trais', 4: 'drais', 5: 'pais',
+            6: 'zais', 7: 'sais', 8: 'achts', 9: 'nains', 10: 'uns',
+            100: 'hundrt', 1000: 'tousnd', 1000000: 'milionen',
+            1000000000: 'bilionen', 1000000000000: 'trilionen',
+            1000000000000000: 'qadrilionen', 1000000000000000000: 'quintilionen',
+            1000000000000000000000: 'sextilionen', 1000000000000000000000000: 'septilionen',
+            1000000000000000000000000000: 'oktilionen',
+            1000000000000000000000000000000: 'nonilionen',
+            1000000000000000000000000000000000: 'decilionen'
+        };
+
+        // Speciální mapování pro čísla pro zpětný překlad (pro zjednodušení)
+        const NUMBERS_MY_LANG_TO_CZ_REV = {
+            'als': 1, 'dvais': 2, 'trais': 3, 'drais': 4, 'pais': 5, 'zais': 6,
+            'sais': 7, 'achts': 8, 'nains': 9, 'uns': 10,
+            'unals': 11, 'undvais': 12, 'untrais': 13, 'undrais': 14, 'unpais': 15,
+            'unzais': 16, 'unsais': 17, 'unachts': 18, 'unains': 19, 'dvauns': 20,
+            'traiuns': 30, 'drauns': 40, 'paiuns': 50, 'zaiuns': 60, 'saiuns': 70,
+            'achtuns': 80, 'nainuns': 90, 'hundrt': 100, 'tousnd': 1000,
+            'milionen': 1_000_000, 'bilionen': 1_000_000_000,
+            'trilionen': 1_000_000_000_000,
+            'qadrilionen': 1_000_000_000_000_000, 'quintilionen': 1_000_000_000_000_000_000,
+            'sextilionen': 1_000_000_000_000_000_000_000,
+            'septilionen': 1_000_000_000_000_000_000_000_000,
+            'oktilionen': 1_000_000_000_000_000_000_000_000_000,
+            'nonilionen': 1_000_000_000_000_000_000_000_000_000_000,
+            'decilionen': 1_000_000_000_000_000_000_000_000_000_000_000
+        };
+
+
+        // --- 2. Pomocné funkce pro pravidla ---
+
+        function convertNumberToMyLang(num) {
+            if (num === 0) {
+                return NUMBERS_CZ_TO_MY_LANG[0];
+            }
+
+            const parts = [];
+            let currentNum = num;
+
+            // Decilionen a vyšší
+            const largeNumberUnits = [
+                { val: 1e33, name: 'decilionen' }, // 1_000_000_000_000_000_000_000_000_000_000_000
+                { val: 1e30, name: 'nonilionen' },
+                { val: 1e27, name: 'oktilionen' },
+                { val: 1e24, name: 'septilionen' },
+                { val: 1e21, name: 'sextilionen' },
+                { val: 1e18, name: 'quintilionen' },
+                { val: 1e15, name: 'qadrilionen' },
+                { val: 1e12, name: 'trilionen' },
+                { val: 1e9, name: 'bilionen' },
+                { val: 1e6, name: 'milionen' },
+                { val: 1e3, name: 'tousnd' }
+            ];
+
+            for (const unit of largeNumberUnits) {
+                if (currentNum >= unit.val) {
+                    const count = Math.floor(currentNum / unit.val);
+                    parts.push(convertNumberToMyLang(count) + " " + NUMBERS_CZ_TO_MY_LANG[unit.val]);
+                    currentNum %= unit.val;
+                }
+            }
+            
+            if (currentNum >= 100) {
+                const hundredsVal = Math.floor(currentNum / 100);
+                if (hundredsVal > 1) { // Pro 200-900 je "dvai hundrt" atd.
+                    // This part needs adjustment for 'dvai', 'trai' etc.
+                    // Simplified: just use the base number and append 'i'
+                    const prefixWord = PRONOUNS_CZ_TO_MY_LANG[hundredsVal.toString()] || (hundredsVal.toString() + 'i'); // This is a simplification; 'dvai' vs 'dvais' is nuanced
+                    parts.push(`${convertNumberToMyLang(hundredsVal).replace(/s$/, 'i')} ${NUMBERS_CZ_TO_MY_LANG[100]}`); // Corrected: Use number word, remove 's' and add 'i'
+                } else { // Pro 100-199 je "als hundrt"
+                    parts.push(`${NUMBERS_CZ_TO_MY_LANG[1]} ${NUMBERS_CZ_TO_MY_LANG[100]}`);
+                }
+                currentNum %= 100;
+            }
+
+            if (currentNum > 0) {
+                if (currentNum >= 1 && currentNum <= 10) {
+                    parts.push(NUMBERS_CZ_TO_MY_LANG[currentNum]);
+                } else if (currentNum >= 11 && currentNum <= 19) {
+                    parts.push(NUMBERS_CZ_TO_MY_LANG[10] + NUMBERS_CZ_TO_MY_LANG[currentNum % 10]); // unals, undvais etc.
+                } else if (currentNum >= 20 && currentNum < 100) {
+                    const tensVal = Math.floor(currentNum / 10) * 10;
+                    const unitsVal = currentNum % 10;
+                    let tensWord = "";
+                    if (tensVal === 20) tensWord = "dvauns";
+                    else if (tensVal === 30) tensWord = "traiuns";
+                    else if (tensVal === 40) tensWord = "drauns";
+                    else if (tensVal === 50) tensWord = "paiuns";
+                    else if (tensVal === 60) tensWord = "zaiuns";
+                    else if (tensVal === 70) tensWord = "saiuns";
+                    else if (tensVal === 80) tensWord = "achtuns";
+                    else if (tensVal === 90) tensWord = "nainuns";
+
+                    if (unitsVal === 0) {
+                        parts.push(tensWord);
+                    } else {
+                        parts.push(`${tensWord} ${NUMBERS_CZ_TO_MY_LANG[unitsVal]}`);
+                    }
+                }
+            }
+            return parts.join(" ").trim();
+        }
+
+        function convertNumberToCz(myLangNumStr) {
+            const words = myLangNumStr.split(' ');
+            let totalVal = 0;
+            let currentBlockValue = 0; // Value for current thousands, millions block
+            let lastMultiplier = 1;
+
+            const processBlock = (blockWords) => {
+                let blockVal = 0;
+                let tempTens = 0; // For numbers like "als hundrt dvauns sais" -> 137
+                
+                for (let j = 0; j < blockWords.length; j++) {
+                    const word = blockWords[j];
+                    if (word === 'hundrt') {
+                        let hundredVal = 100;
+                        if (j > 0 && ['dvai', 'trai', 'drai', 'pai', 'zai', 'sai', 'acht', 'nain'].includes(blockWords[j-1])) {
+                             const prefixWord = blockWords[j-1].replace('i', 's');
+                             hundredVal = NUMBERS_MY_LANG_TO_CZ_REV[prefixWord] * 100;
+                             blockVal -= NUMBERS_MY_LANG_TO_CZ_REV[prefixWord]; // Remove base if already added
+                        }
+                        
+                        blockVal += hundredVal;
+
+                        if (j + 1 < blockWords.length) {
+                            const nextWord = blockWords[j+1];
+                            if (nextWord.endsWith('uns')) { // e.g., dvauns (tens)
+                                tempTens = NUMBERS_MY_LANG_TO_CZ_REV[nextWord];
+                                blockVal += tempTens;
+                                j++; // Consume the tens word
+                                if (j + 1 < blockWords.length && !blockWords[j+1].endsWith('uns')) { // Check for units
+                                    blockVal += NUMBERS_MY_LANG_TO_CZ_REV[blockWords[j+1]];
+                                    j++; // Consume the units word
+                                }
+                            }
+                        }
+                    } else if (NUMBERS_MY_LANG_TO_CZ_REV[word]) {
+                        if (word.startsWith('un') && word.length > 2) { // Teens
+                            blockVal += 10 + NUMBERS_MY_LANG_TO_CZ_REV[word.substring(2)];
+                        } else if (word.endsWith('uns')) { // Tens
+                            blockVal += NUMBERS_MY_LANG_TO_CZ_REV[word];
+                        } else { // Single digit
+                            blockVal += NUMBERS_MY_LANG_TO_CZ_REV[word];
+                        }
+                    }
+                }
+                return blockVal;
+            };
+
+            let currentBlockWords = [];
+            for (let i = words.length - 1; i >= 0; i--) {
+                const word = words[i];
+                if (['milionen', 'bilionen', 'trilionen', 'qadrilionen', 'quintilionen', 'sextilionen', 'septilionen', 'oktilionen', 'nonilionen', 'decilionen', 'tousnd', 'hundrt'].includes(word)) {
+                    if (currentBlockWords.length > 0) {
+                        currentBlockValue = processBlock(currentBlockWords);
+                        totalVal += currentBlockValue * lastMultiplier;
+                        currentBlockWords = [];
+                    }
+                    
+                    const unitValue = NUMBERS_MY_LANG_TO_CZ_REV[word];
+                    if (unitValue) {
+                        lastMultiplier = unitValue;
+                    }
+
+                } else {
+                    currentBlockWords.unshift(word); // Add to the front for correct processing order
+                }
+            }
+
+            if (currentBlockWords.length > 0) {
+                currentBlockValue = processBlock(currentBlockWords);
+                totalVal += currentBlockValue * lastMultiplier;
+            }
+            
+            return totalVal.toString();
+        }
+
+        function applyMyLangVerbTense(infinitive, tenseMarker = null, isNegated = false) {
+            let conjugatedVerb = infinitive;
+
+            if (tenseMarker === 'present') {
+                conjugatedVerb += 'e';
+            } else if (tenseMarker === 'past') {
+                conjugatedVerb = `lozoi ${infinitive}`;
+            } else if (tenseMarker === 'future') {
+                conjugatedVerb = `aus ${infinitive} en`;
+            } else if (tenseMarker === 'imperative') { // Rozkazovací způsob
+                if (infinitive.endsWith('t')) {
+                    conjugatedVerb = infinitive + 'ete';
+                } else {
+                    conjugatedVerb = infinitive + 'te';
+                }
+            }
+
+            if (isNegated) {
+                // Negace pro budoucí čas se nachází před "aus"
+                if (tenseMarker === 'future') {
+                    return `nach ${conjugatedVerb}`;
+                } else {
+                    return `nach ${conjugatedVerb}`;
+                }
+            }
+            return conjugatedVerb;
+        }
+
+        function applyMyLangAdjectiveComparison(adj, degree) {
+            const vowels = 'aeiou';
+            let suffix = '';
+            if (degree === 'comparative') {
+                suffix = 'e';
+            } else if (degree === 'superlative') {
+                suffix = 'en';
+            } else {
+                return adj; // Není třeba stupňovat
+            }
+
+            if (adj.length > 0 && vowels.includes(adj[adj.length - 1])) {
+                return adj + adj[adj.length - 1] + suffix;
+            } else {
+                return adj + suffix;
+            }
+        }
+
+        function applyMyLangAdverbSuffix(adj) {
+            return adj + 'ele';
+        }
+
+        // --- 3. Překladové funkce ---
+
+        function translateCzToMyLang(text) {
+            const words = text.toLowerCase().replace(/[.!?]/g, '').split(' ');
+            const translatedWords = [];
+            const processedIndices = new Set(); // To track words already processed in multi-word constructs
+
+            for (let i = 0; i < words.length; i++) {
+                if (processedIndices.has(i)) continue;
+
+                const word = words[i];
+
+                // Zájmena a pády
+                let isPronounCaseHandled = false;
+                if (PRONOUNS_CZ_TO_MY_LANG[word]) {
+                    const myLangPronoun = PRONOUNS_CZ_TO_MY_LANG[word];
+                    if (i + 1 < words.length && (words[i+1] === 'u' || words[i+1] === 'k')) {
+                        if (words[i+1] === 'u') {
+                            translatedWords.push(myLangPronoun + 'h');
+                        } else if (words[i+1] === 'k') {
+                            translatedWords.push(myLangPronoun + 't');
+                        }
+                        processedIndices.add(i);
+                        processedIndices.add(i + 1);
+                        isPronounCaseHandled = true;
+                    } else {
+                        translatedWords.push(myLangPronoun);
+                        processedIndices.add(i);
+                        isPronounCaseHandled = true;
+                    }
+                }
+                if (isPronounCaseHandled) continue;
+
+                // Slovesa (složitější kvůli časování a negaci)
+                let isVerbHandled = false;
+                let czInfinitiveBase = word;
+                let tense = 'present'; // Default to present as per rules
+                let isNegated = false;
+
+                // Try to determine infinitive from conjugated/negated CZ verb
+                let foundVerbInfinitive = false;
+                for (const czInf in VERBS_CZ_TO_MY_LANG) {
+                    // Check for negation first
+                    if (word.startsWith('ne') && word.substring(2) === czInf.toLowerCase()) { // "nejít"
+                         czInfinitiveBase = czInf;
+                         isNegated = true;
+                         foundVerbInfinitive = true;
+                         break;
+                    }
+                    if (word.startsWith('ne') && word.substring(2) === czInf + 'l') { // "nejedl"
+                        czInfinitiveBase = czInf;
+                        isNegated = true;
+                        tense = 'past';
+                        foundVerbInfinitive = true;
+                        break;
+                    }
+                    if (word.startsWith('ne') && word.substring(2) === czInf + 'e') { // "nejí"
+                        czInfinitiveBase = czInf;
+                        isNegated = true;
+                        tense = 'present';
+                        foundVerbInfinitive = true;
+                        break;
+                    }
+                    if (word === czInf.toLowerCase()) { // "jíst" (infinitive)
+                        czInfinitiveBase = czInf;
+                        foundVerbInfinitive = true;
+                        break;
+                    }
+                    // Simple check for present tense endings, very basic
+                    if (word.endsWith('ím') || word.endsWith('íš') || word.endsWith('í') || word.endsWith('íme') || word.endsWith('íte') || word.endsWith('ou')) {
+                        const tempBase = word.substring(0, word.length - 1); // remove ending 'e'
+                        if (VERBS_CZ_TO_MY_LANG[tempBase]) {
+                            czInfinitiveBase = tempBase;
+                            tense = 'present';
+                            foundVerbInfinitive = true;
+                            break;
+                        }
+                    }
+                    // Simple check for past tense (byl, byla, bylo)
+                    if (i > 0 && (words[i-1] === 'byl' || words[i-1] === 'byla' || words[i-1] === 'bylo')) {
+                        tense = 'past';
+                        czInfinitiveBase = czInf; // This is a rough guess
+                        foundVerbInfinitive = true;
+                        break;
+                    }
+                    // Simple check for future tense (bude)
+                    if (i > 0 && words[i-1].startsWith('bude')) {
+                        tense = 'future';
+                        czInfinitiveBase = czInf; // Rough guess
+                        foundVerbInfinitive = true;
+                        break;
+                    }
+                    // Rozkazovací způsob: ends with ! or specific common imperative endings
+                    if (word.endsWith('j') || word.endsWith('ez') || word.endsWith('i') || word.endsWith('te')) { // e.g., "jez!", "spi!"
+                        // Find infinitive that matches
+                        const possibleInf = Object.keys(VERBS_CZ_TO_MY_LANG).find(inf => word.startsWith(inf.substring(0,2))); // Very weak heuristic
+                        if (possibleInf) {
+                            czInfinitiveBase = possibleInf;
+                            tense = 'imperative';
+                            foundVerbInfinitive = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (foundVerbInfinitive) {
+                    const myLangInfinitive = VERBS_CZ_TO_MY_LANG[czInfinitiveBase];
+                    const conjugatedMyLangVerb = applyMyLangVerbTense(myLangInfinitive, tense, isNegated);
+                    translatedWords.push(conjugatedMyLangVerb);
+                    processedIndices.add(i);
+                    // Consume previous words if they were tense markers like 'byl', 'bude'
+                    if (tense === 'past' && i > 0 && (words[i-1] === 'byl' || words[i-1] === 'byla' || words[i-1] === 'bylo') && !isNegated) {
+                        // This implies we already processed the current verb, and we need to remove the auxiliary
+                        // This is tricky with simple word-by-word. A true parser would be needed.
+                        // For now, we will add a special marker and try to remove it later or rely on post-processing.
+                    } else if (tense === 'future' && i > 0 && words[i-1].startsWith('bude') && !isNegated) {
+                        // Same as above
+                    }
+                    isVerbHandled = true;
+                }
+                if (isVerbHandled) continue;
+                
+                // Adjektiva a stupňování
+                let isAdjHandled = false;
+                for (const czAdj in ADJECTIVES_CZ_TO_MY_LANG) {
+                    if (word === czAdj.toLowerCase()) { // Base adjective
+                        translatedWords.push(ADJECTIVES_CZ_TO_MY_LANG[czAdj]);
+                        isAdjHandled = true;
+                        break;
+                    } else if (word.startsWith('nej') && word.substring(3).toLowerCase() === czAdj.toLowerCase() + 'ší') { // Superlative (největší)
+                        translatedWords.push(applyMyLangAdjectiveComparison(ADJECTIVES_CZ_TO_MY_LANG[czAdj], 'superlative'));
+                        isAdjHandled = true;
+                        break;
+                    } else if (word.endsWith('ější') && word.substring(0, word.length - 4).toLowerCase() === czAdj.toLowerCase()) { // Comparative (větší)
+                        translatedWords.push(applyMyLangAdjectiveComparison(ADJECTIVES_CZ_TO_MY_LANG[czAdj], 'comparative'));
+                        isAdjHandled = true;
+                        break;
+                    }
+                }
+                if (isAdjHandled) continue;
+
+                // Příslovce způsobu (z adjektiv)
+                let isAdverbHandled = false;
+                for (const czAdj in ADJECTIVES_CZ_TO_MY_LANG) {
+                    if (word.toLowerCase() === czAdj.toLowerCase().replace(/ý$/, 'e')) { // rychlý -> rychle (remove 'ý', add 'e')
+                        translatedWords.push(applyMyLangAdverbSuffix(ADJECTIVES_CZ_TO_MY_LANG[czAdj]));
+                        isAdverbHandled = true;
+                        break;
+                    }
+                    // Handle 'dobře'
+                    if (word.toLowerCase() === 'dobře' && czAdj.toLowerCase() === 'dobrý') {
+                        translatedWords.push(applyMyLangAdverbSuffix(ADJECTIVES_CZ_TO_MY_LANG[czAdj]));
+                        isAdverbHandled = true;
+                        break;
+                    }
+                }
+                if (isAdverbHandled) continue;
+
+                // Podstatná jména
+                if (NOUNS_CZ_TO_MY_LANG[word]) {
+                    translatedWords.push(NOUNS_CZ_TO_MY_LANG[word]);
+                }
+                // Měsíce, dny, spojky/předložky (přímý překlad)
+                else if (MONTHS_CZ_TO_MY_LANG[word]) {
+                    translatedWords.push(MONTHS_CZ_TO_MY_LANG[word]);
+                } else if (DAYS_CZ_TO_MY_LANG[word]) {
+                    translatedWords.push(DAYS_CZ_TO_MY_LANG[word]);
+                } else if (CONJ_PREP_CZ_TO_MY_LANG[word]) {
+                    translatedWords.push(CONJ_PREP_CZ_TO_MY_LANG[word]);
+                }
+                // Čísla (využívá funkci)
+                else if (!isNaN(parseInt(word))) { // Check if it's a number
+                    translatedWords.push(convertNumberToMyLang(parseInt(word)));
+                }
+                // Speciální markery a slova
+                else if (word === 'kdo') {
+                    translatedWords.push('wa');
+                } else if (word === 'co') {
+                    translatedWords.push('da');
+                } else if (word === 'kde') {
+                    translatedWords.push('he');
+                } else if (word === 'kam') {
+                    translatedWords.push('ais');
+                } else if (word === 'dod') { // marker vlastnictví (should be for CZ_to_My_Lang too)
+                    translatedWords.push('dod');
+                } else if (word === 'wa') { // otázka (already in MyLang)
+                    translatedWords.push('wa');
+                }
+                // Jiné neznámé slovo (ponechat)
+                else {
+                    translatedWords.push(word);
+                }
+                processedIndices.add(i);
+            }
+
+            // --- Pokus o rekonstrukci věty podle SOV pravidla ---
+            // Toto je velmi zjednodušené a nebude fungovat pro složité věty.
+            // Pro správné SOV by bylo potřeba rozpoznat podmět, předmět a sloveso.
+
+            const finalSentence = [];
+            let verbPart = [];
+            let subject = null;
+            let questionMarker = null;
+
+            // First pass to identify subject, verb part, and question marker
+            for (const word of translatedWords) {
+                if (word.startsWith('wa')) { // Question marker
+                    questionMarker = word;
+                } else if (PRONOUNS_MY_LANG_TO_CZ[word.replace(/h$|t$/, '')]) { // Pronoun (possibly with case suffix)
+                    if (!subject) { // Take the first encountered pronoun as subject
+                        subject = word;
+                    } else { // Other pronouns are likely objects or part of phrases
+                        finalSentence.push(word);
+                    }
+                } else if (word.startsWith('es') || word.startsWith('hav') || word.startsWith('ir') || word.startsWith('ven') || word.startsWith('eden') || word.startsWith('pit') || word.startsWith('viz') || word.startsWith('parol') || word.startsWith('vol') || word.startsWith('fak') || word.startsWith('don') || word.startsWith('prend') || word.startsWith('sav') || word.startsWith('kompr') || word.startsWith('viv') || word.startsWith('mor') || word.startsWith('labor') || word.startsWith('dorm') || word.startsWith('lez') || word.startsWith('pluv') || word.startsWith('lozoi') || word.startsWith('aus') || word.startsWith('nach')) {
+                    verbPart.push(word);
+                } else {
+                    finalSentence.push(word);
+                }
+            }
+
+            // Assemble the sentence in SOV order
+            let result = '';
+            if (questionMarker) {
+                result += questionMarker + ' ';
+            }
+            if (subject) {
+                result += subject + ' ';
+            }
+            result += finalSentence.join(' ') + ' ';
+            if (verbPart.length > 0) {
+                result += verbPart.join(' ');
+            }
+            
+            return result.trim();
+        }
+
+
+        function translateMyLangToCz(text) {
+            const words = text.toLowerCase().replace(/[.!?]/g, '').split(' ');
+            const translatedWords = [];
+            const processedIndices = new Set();
+
+            for (let i = 0; i < words.length; i++) {
+                if (processedIndices.has(i)) continue;
+
+                const word = words[i];
+
+                // Zájmena a pády (složené slovo)
+                let isPronounCaseHandled = false;
+                for (const pMyLang in PRONOUNS_MY_LANG_TO_CZ) {
+                    if (word.startsWith(pMyLang)) {
+                        if (word.endsWith('h') && word.length === pMyLang.length + 1) {
+                            translatedWords.push(PRONOUNS_MY_LANG_TO_CZ[pMyLang] + ' (u)');
+                            isPronounCaseHandled = true;
+                            break;
+                        } else if (word.endsWith('t') && word.length === pMyLang.length + 1) {
+                            translatedWords.push(PRONOUNS_MY_LANG_TO_CZ[pMyLang] + ' (k)');
+                            isPronounCaseHandled = true;
+                            break;
+                        } else if (word === pMyLang) { // Base pronoun form
+                            translatedWords.push(PRONOUNS_MY_LANG_TO_CZ[pMyLang]);
+                            isPronounCaseHandled = true;
+                            break;
+                        }
+                    }
+                }
+                if (isPronounCaseHandled) { processedIndices.add(i); continue; }
+
+                // Slovesa (včetně časování a negace)
+                let isVerbHandled = false;
+                let originalVerbMyLang = null;
+                let tense = null;
+                let isNegated = false;
+                
+                let currentWordIndex = i;
+                let tempWord = words[currentWordIndex];
+
+                if (tempWord === 'nach') { // Negation
+                    isNegated = true;
+                    currentWordIndex++;
+                    if (currentWordIndex < words.length) tempWord = words[currentWordIndex];
+                    else { // "nach" by itself
+                        translatedWords.push('ne');
+                        processedIndices.add(i);
+                        isVerbHandled = true;
+                    }
+                }
+
+                if (!isVerbHandled) {
+                    if (tempWord === 'lozoi') { // Past Tense
+                        tense = 'past';
+                        currentWordIndex++;
+                        if (currentWordIndex < words.length) originalVerbMyLang = words[currentWordIndex];
+                    } else if (tempWord === 'aus') { // Future Tense
+                        tense = 'future';
+                        currentWordIndex++;
+                        if (currentWordIndex < words.length) originalVerbMyLang = words[currentWordIndex];
+                        if (currentWordIndex + 1 < words.length && words[currentWordIndex + 1] === 'en') {
+                            currentWordIndex++; // Consume 'en'
+                        }
+                    } else if (tempWord.endsWith('e') && VERBS_MY_LANG_TO_CZ[tempWord.slice(0, -1)]) { // Present Tense (edene)
+                        originalVerbMyLang = tempWord.slice(0, -1);
+                        tense = 'present';
+                    } else if (tempWord.endsWith('te') && VERBS_MY_LANG_TO_CZ[tempWord.slice(0, -2)]) { // Imperative (irte)
+                        originalVerbMyLang = tempWord.slice(0, -2);
+                        translatedWords.push(VERBS_MY_LANG_TO_CZ[originalVerbMyLang] + '!');
+                        isVerbHandled = true;
+                    } else if (tempWord.endsWith('ete') && VERBS_MY_LANG_TO_CZ[tempWord.slice(0, -3)]) { // Imperative (pitete)
+                        originalVerbMyLang = tempWord.slice(0, -3);
+                        translatedWords.push(VERBS_MY_LANG_TO_CZ[originalVerbMyLang] + '!');
+                        isVerbHandled = true;
+                    } else if (VERBS_MY_LANG_TO_CZ[tempWord]) { // Base infinitive
+                        originalVerbMyLang = tempWord;
+                    }
+
+                    if (originalVerbMyLang && VERBS_MY_LANG_TO_CZ[originalVerbMyLang] && !isVerbHandled) {
+                        let czInfinitive = VERBS_MY_LANG_TO_CZ[originalVerbMyLang];
+                        if (isNegated) {
+                            czInfinitive = 'ne' + czInfinitive;
+                        }
+
+                        if (tense === 'present') {
+                            // This is complex for CZ, simplified to infinitive + (e)
+                            translatedWords.push(czInfinitive + '(e)'); 
+                        } else if (tense === 'past') {
+                            translatedWords.push('byl ' + czInfinitive);
+                        } else if (tense === 'future') {
+                            translatedWords.push('bude ' + czInfinitive);
+                        } else { // Bare infinitive
+                            translatedWords.push(czInfinitive);
+                        }
+                        isVerbHandled = true;
+                    }
+                }
+                
+                if (isVerbHandled) {
+                    for (let k = i; k <= currentWordIndex; k++) processedIndices.add(k);
+                    continue;
+                }
+
+                // Adjektiva a stupňování
+                let isAdjHandled = false;
+                for (const baseAdjMyLang in ADJECTIVES_MY_LANG_TO_CZ) {
+                    if (word === baseAdjMyLang) { // Base adjective
+                        translatedWords.push(ADJECTIVES_MY_LANG_TO_CZ[baseAdjMyLang]);
+                        isAdjHandled = true;
+                        break;
+                    } else if (word.startsWith(baseAdjMyLang)) {
+                        const suffix = word.substring(baseAdjMyLang.length);
+                        const lastCharBase = baseAdjMyLang[baseAdjMyLang.length - 1];
+                        
+                        if ((suffix === 'e' && word.length === baseAdjMyLang.length + 1) || // grand+e
+                            (vowels.includes(lastCharBase) && suffix === lastCharBase + 'e' && word.length === baseAdjMyLang.length + 2)) { // hai+i+e
+                            translatedWords.push(ADJECTIVES_MY_LANG_TO_CZ[baseAdjMyLang] + '(ejší)');
+                            isAdjHandled = true;
+                            break;
+                        } else if ((suffix === 'en' && word.length === baseAdjMyLang.length + 2) || // grand+en
+                                   (vowels.includes(lastCharBase) && suffix === lastCharBase + 'en' && word.length === baseAdjMyLang.length + 3)) { // hai+i+en
+                            translatedWords.push('nej' + ADJECTIVES_MY_LANG_TO_CZ[baseAdjMyLang] + '(ější)');
+                            isAdjHandled = true;
+                            break;
+                        }
+                    }
+                }
+                if (isAdjHandled) { processedIndices.add(i); continue; }
+
+                // Příslovce způsobu (z adjektiv)
+                let isAdverbHandled = false;
+                for (const baseAdjMyLang in ADJECTIVES_MY_LANG_TO_CZ) {
+                    if (word.startsWith(baseAdjMyLang) && word.endsWith('ele') && word.length === baseAdjMyLang.length + 3) {
+                        translatedWords.push(ADJECTIVES_MY_LANG_TO_CZ[baseAdjMyLang] + '(příslovce)'); // Simplified notation
+                        isAdverbHandled = true;
+                        break;
+                    }
+                }
+                if (isAdverbHandled) { processedIndices.add(i); continue; }
+                    
+                // Podstatná jména
+                if (NOUNS_MY_LANG_TO_CZ[word]) {
+                    translatedWords.push(NOUNS_MY_LANG_TO_CZ[word]);
+                }
+                // Speciální případy pro podstatná jména - vlastnictví
+                else if (word === 'dod' && i > 0 && PRONOUNS_MY_LANG_TO_CZ[words[i-1].replace(/h$|t$/, '')]) { // Check if previous word was a pronoun base or case
+                    translatedWords.push('(vlastnictví)'); // Marker for clarity
+                }
+                // Měsíce, dny, spojky/předložky (přímý překlad)
+                else if (MONTHS_MY_LANG_TO_CZ[word]) {
+                    translatedWords.push(MONTHS_MY_LANG_TO_CZ[word]);
+                } else if (DAYS_MY_LANG_TO_CZ[word]) {
+                    translatedWords.push(DAYS_MY_LANG_TO_CZ[word]);
+                } else if (CONJ_PREP_MY_LANG_TO_CZ[word]) {
+                    translatedWords.push(CONJ_PREP_MY_LANG_TO_CZ[word]);
+                }
+                // Čísla (využívá funkci)
+                else if (/\d/.test(word)) { // Check if it contains digits, more robust than isNaN
+                    translatedWords.push(convertNumberToCz(word));
+                }
+                // Speciální markery a slova
+                else if (word === 'als' && i + 1 < words.length && words[i+1] === 'danet') { // als danet
+                    translatedWords.push('(podmět)');
+                    processedIndices.add(i + 1); // Consume 'danet'
+                } else if (word === 'wa') { // question
+                    translatedWords.push('Wa');
+                } else if (word === 'he') { // kde?
+                    translatedWords.push('kde');
+                } else if (word === 'ais') { // kam?
+                    translatedWords.push('kam');
+                }
+                // Jiné neznámé slovo
+                else {
+                    translatedWords.push(word);
+                }
+                processedIndices.add(i);
+            }
+            
+            // --- Pokus o rekonstrukci věty podle SVO pravidla pro češtinu ---
+            // Toto je velmi zjednodušené.
+
+            const finalCzSentence = [];
+            let verbInCz = null;
+            let subjectInCz = null;
+            let questionMarkerCz = null;
+
+            const tempWords = [...translatedWords]; // Work on a copy
+
+            // Extract question marker if present
+            if (tempWords[0] === 'Wa') {
+                questionMarkerCz = tempWords.shift();
+            }
+
+            // Try to find a subject (pronoun or noun, very basic)
+            for (let j = 0; j < tempWords.length; j++) {
+                const word = tempWords[j];
+                const cleanWord = word.replace(' (u)', '').replace(' (k)', '').replace('(podmět)', '');
+                if (Object.values(PRONOUNS_MY_LANG_TO_CZ).includes(cleanWord) || Object.values(NOUNS_MY_LANG_TO_CZ).includes(cleanWord)) {
+                    subjectInCz = tempWords.splice(j, 1)[0];
+                    break;
+                }
+            }
+
+            // Try to find the verb (heuristics)
+            for (let j = 0; j < tempWords.length; j++) {
+                const word = tempWords[j];
+                if (word.includes('(e)') || word.startsWith('byl') || word.startsWith('bude') || word.endsWith('!')) {
+                    verbInCz = tempWords.splice(j, 1)[0];
+                    break;
+                }
+            }
+
+            if (subjectInCz) {
+                finalCzSentence.push(subjectInCz);
+            }
+            if (verbInCz) {
+                finalCzSentence.push(verbInCz);
+            }
+            finalCzSentence.push(...tempWords); // Remaining words
+
+            let result = finalCzSentence.join(' ').trim();
+            if (questionMarkerCz) {
+                result = `${questionMarkerCz} ${result}?`; // Add question mark at end
+            }
+            
+            return result;
+        }
+
+
+        // --- Hlavní logika webové stránky ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputTextarea = document.getElementById('inputText');
+            const outputTextarea = document.getElementById('outputText');
+            const translateButton = document.getElementById('translateButton');
+            const directionRadios = document.querySelectorAll('input[name="translationDirection"]');
+            const messageArea = document.getElementById('messageArea');
+
+            let currentDirection = 'cz_to_my'; // Default direction
+
+            // Event listener pro změnu směru překladu
+            directionRadios.forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    currentDirection = event.target.value;
+                    // Clear fields and messages on direction change
+                    inputTextarea.value = '';
+                    outputTextarea.value = '';
+                    messageArea.classList.add('hidden');
+                });
+            });
+
+            // Event listener pro tlačítko Přeložit
+            translateButton.addEventListener('click', () => {
+                const inputText = inputTextarea.value.trim();
+                if (!inputText) {
+                    messageArea.textContent = 'Prosím, zadejte text k překladu.';
+                    messageArea.classList.remove('hidden');
+                    return;
+                }
+                messageArea.classList.add('hidden'); // Hide previous messages
+
+                let translatedText = '';
+                try {
+                    if (currentDirection === 'cz_to_my') {
+                        translatedText = translateCzToMyLang(inputText);
+                        messageArea.textContent = 'Upozornění: Pro správné pořadí slov (Podmět-Předmět-Sloveso) a přesné časování může být potřeba ruční úprava.';
+                        messageArea.classList.remove('hidden');
+                    } else {
+                        translatedText = translateMyLangToCz(inputText);
+                        messageArea.textContent = 'Upozornění: Pro správné pořadí slov (Podmět-Sloveso-Předmět) a přesné časování může být potřeba ruční úprava.';
+                        messageArea.classList.remove('hidden');
+                    }
+                    outputTextarea.value = translatedText;
+                } catch (error) {
+                    console.error("Chyba při překladu:", error);
+                    messageArea.textContent = 'Nastala chyba při překladu. Zkontrolujte prosím vstup.';
+                    messageArea.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
